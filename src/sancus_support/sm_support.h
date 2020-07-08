@@ -207,7 +207,8 @@ extern char __unprotected_sp;
  * Returns true iff whole buffer [p,p+len-1] is outside of the sm SancusModule
  */
 #define sancus_is_outside_sm( sm, p, len) \
-    ( __OUTSIDE_SM(p, sm) && __OUTSIDE_SM((p+len-1), sm) )
+    ( __OUTSIDE_SM(p, sm) && ((len <= 0) || \
+    (__OUTSIDE_SM((p+len-1), sm) && ( ((void*)(p+len-1)) >= ((void*)p) ))) )
 
 /**
  * Interrupt vector for the Sancus violation ISR.
