@@ -574,6 +574,22 @@ always_inline sm_id sancus_get_caller_id(void)
 }
 
 /**
+ * Compare two equal length buffers in constant time
+ */
+always_inline int compare_ct_time(volatile unsigned char *a1, volatile unsigned char *a2, size_t len)
+{
+    volatile unsigned char result = 0x0;
+    int i;
+
+    for (i=0; i<len; i++)
+    {
+        result |= a1[i] ^ a2[i];
+    }
+
+    return (result == 0x0);
+}
+
+/**
  * Perform a call to a Sancus module.
  *
  * The call will be inlined at the call site which means that the control flow
