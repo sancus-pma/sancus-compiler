@@ -33,6 +33,7 @@ set(PY_LIBS
     sancus/crypto.py
     sancus/paths.py
     sancus/config.py
+    sancus/sancus_config.py
 )
 
 install(FILES ${FILES}    DESTINATION ${INSTALL_BASE_DIR})

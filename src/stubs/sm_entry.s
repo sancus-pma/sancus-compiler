@@ -7,16 +7,34 @@
     ; r7: return address
 __sm_entry:
     ; === need a secure stack to handle IRQs ===
-    dint
+    ; dint
+    ; First remove ssa base addr to notify violation handler to not use this SMs violation pointer
+    mov #0, &__sm_ssa_base_addr
+    ; back up r15
+    mov r15, &__sm_tmp
+    ; set up clix length and call clix (word 0x1389)
+    mov #100, r15 
+    .word 0x1389
+    ; restore r15
+    mov &__sm_tmp, r15
 
     ; If we are here because of an IRQ, we will need the current SP later. We do
     ; do not store it in its final destination yet (__sm_irq_sp) because we may
     ; not actually be called by an IRQ in which case we might overwrite a stored
     ; stack pointer.
     mov r1, &__sm_tmp
-    # Switch stack.
-    ; __sm_sp is our stackpointer
-    mov #__sm_sp, &__sm_sp_addr
+
+    ; initialize SSA frame address for IRQ logic
+    ; Technically, this could be set to any SSA but we have just one for now
+    mov #__sm_ssa_base, &__sm_ssa_base_addr
+    
+    ; Our stack pointer is either at __sm_ssa_sp or __sm_sp, depending
+    ; on whether we got interrupted last time or not. Pick __sm_sp only if 
+    ; __sm_ssa_sp is empty.
+    mov &__sm_ssa_sp, r1
+    cmp #0, r1
+    jne 1f
+    ; ssa_sp is empty -> __sm_sp is our stackpointer, it lies at #ssa_base-2
     mov &__sm_sp, r1
     ; initialize sp on first entry
     cmp #0x0, r1
@@ -24,18 +42,7 @@ __sm_entry:
     mov #__sm_stack_init, r1
 
 1:
-    ; check if this is a return from a interrupt
-    bit #0x1, &__sm_sp
-
-    ; === safe to handle IRQs now ===
-    eint
-
-    jz 1f
-    ; restore execution state if the sm was resumed
-    br #__reti_entry ; defined in exit.s
-
-1:
-    ; check of this is an IRQ
+    ; check if this is an IRQ
     push r15
     ; sancus_get_caller_id()
     .word 0x1387
@@ -55,9 +62,28 @@ __sm_entry:
     ; If we just do je __sm_isr we get a PCREL relocation which our runtime
     ; linker doesn't understand yet.
     br #__sm_isr
-1:
-    pop r15
 
+1:
+    ; We are not called by an IRQ. If __sm_ssa_caller_id is not set, fill it with the caller id
+    mov #__sm_ssa_caller_id, r15
+    cmp #0x0, r15
+    jne 1f
+    .word 0x1387
+    mov r15, &__sm_ssa_caller_id
+
+1:
+    ; Pop r15 again from the stack (we don't need the caller_id anymore)
+    pop r15
+    ; check if this is a return from a interrupt
+    bit #0x1, &__sm_ssa_sp
+
+    jz 1f
+    ; restore execution state if the sm was resumed
+    br #__reti_entry ; defined in exit.s
+
+1:
+    ; === safe to handle IRQs now ===
+    eint
     ; check if this is a return
     cmp #0xffff, r6
     jne 1f
@@ -114,6 +140,7 @@ __sm_entry:
 
 1:
     mov #0xffff, r6
+    mov #0, &__sm_ssa_caller_id
     mov #0, &__sm_sp
     br r7
 

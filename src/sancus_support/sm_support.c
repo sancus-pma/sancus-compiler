@@ -11,7 +11,8 @@ sm_id sancus_enable_wrapped(struct SancusModule* sm, unsigned nonce, void* tag)
         "mov %5, r13\n\t"
         "mov %6, r14\n\t"
         "mov %7, r15\n\t"
-        ".word 0x1381\n\t"
+        "1: .word 0x1381\n\t"
+        "jz 1b\n\t" /* restart on IRQ */
         "mov r15, %0"
         : "=m"(sm->id)
         : "m"(tag), "m"(nonce),

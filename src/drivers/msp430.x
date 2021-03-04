@@ -80,28 +80,28 @@ SECTIONS
   $sm_mac_sections
   $sm_wrap_info_sections
    _etext = .; /* Past last read-only (loadable) segment */
+  .bss   :
+  {
+     PROVIDE (__bss_start = .) ;
+     $sm_data_sections
+     __unprotected_sp = .;
+     . += 2;
+    *(.bss .bss.*)
+    *(COMMON)
+     . = ALIGN(2);
+     PROVIDE (__bss_end = .) ;
+  }  > REGION_DATA AT > REGION_TEXT
+   PROVIDE (__bss_size = SIZEOF(.bss) );
   .data   :
   {
      . = ALIGN(2);
      PROVIDE (__data_start = .) ;
     *(.data .data.* .gnu.linkonce.d.*)
      . = ALIGN(2);
-  }  > REGION_DATA AT > REGION_TEXT
+  }  > REGION_DATA
    _edata = . ;  /* Past last read-write (loadable) segment */
    PROVIDE (__data_load_start = LOADADDR(.data) );
    PROVIDE (__data_size = _edata - __data_start );
-  .bss   :
-  {
-     PROVIDE (__bss_start = .) ;
-    *(.bss .bss.*)
-    *(COMMON)
-     . = ALIGN(2);
-     __unprotected_sp = .;
-     . += 2;
-     $sm_data_sections
-     PROVIDE (__bss_end = .) ;
-  }  > REGION_DATA
-   PROVIDE (__bss_size = SIZEOF(.bss) );
   .noinit   :
   {
      PROVIDE (__noinit_start = .) ;

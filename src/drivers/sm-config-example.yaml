@@ -1,0 +1,28 @@
+# Use your SM names as parent elements in the YAML file.
+my_sm_1:
+	# Disallow outcalls tells the linker to abort with a warning if 
+    # it detects an outcall for this SM. Default of this value is false.
+    - disallow_outcalls: True
+    # Use a special sm_entry that is stored at the given total path
+    - sm_entry: "/opt/my_sancus/my_entry.o"
+    # Use a special sm_exit that is stored in the project folder
+    # This project folder has to be given to the linker via the
+    # --project-path option. It allows to write programs user-
+    # independent as the total path can be given during compilation 
+    # instead of being user-specific.
+    - sm_exit: "$PROJECT/stubs/my_exit.o"
+    # Instead of the default sm_isr, we use the special basic_isr as 
+    # defined in sancus. For these standard but non-default options, 
+    # we can use the $SANCUS directory
+    - sm_isr: "$SANCUS/sm_isr_basic.o" 
+    # If the SM is an MMIO sm, we can also swap out the entry stub.
+    # Here we use the default (empty string|not defined -> default)
+    # This line could also be omitted to revert to the default.
+    - sm_mmio_entry: ""
+    # One SM is allowed to support a peripheral offset of a given 
+    # amount of byte. This allows to map the data section over the
+    # peripherals to grant exclusive and faster access to these peripherals
+    - peripheral_offset: 159
+my_sm_2:
+ 	- disallow_outcalls: True
+    

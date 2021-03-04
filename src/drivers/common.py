@@ -113,7 +113,9 @@ def call_prog(prog, arguments=[], get_output=False):
 
 
 def fatal_error(msg):
-    error(msg)
+    W  = '\033[0m'  # white (normal)
+    R  = '\033[31m' # red
+    error(R + msg + W)
     sys.exit(1)
 
 

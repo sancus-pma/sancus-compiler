@@ -334,7 +334,8 @@ always_inline void sancus_disable(void *continuation)
         "clr r12\n\t"
         "clr r13\n\t"
         "clr r14\n\t"
-        ".word 0x1380\n\t"
+        "1: .word 0x1380\n\t"
+        "jz 1b\n\t" /* restart on IRQ */
         ::"m"(continuation):);
 }
 
@@ -349,7 +350,8 @@ always_inline sm_id sancus_verify_address(const void* expected_tag,
     sm_id ret;
     asm("mov %1, r14\n\t"
         "mov %2, r15\n\t"
-        ".word 0x1382\n\t"
+        "1: .word 0x1382\n\t"
+        "jz 1b\n\t" /* restart on IRQ */
         "mov r15, %0"
         : "=m"(ret)
         : "r"(address), "r"(expected_tag)
@@ -387,7 +389,8 @@ always_inline int sancus_verify_caller(const void* expected_tag)
 {
     int ret;
     asm("mov %1, r15\n\t"
-        ".word 0x1383\n\t"
+        "1: .word 0x1383\n\t"
+        "jz 1b\n\t" /* restart on IRQ */
         "mov r15, %0"
         : "=m"(ret)
         : "r"(expected_tag)
@@ -439,7 +442,8 @@ always_inline int sancus_wrap_with_key(const void* key,
         "mov %5, r13\n\t"
         "mov %6, r14\n\t"
         "mov %7, r15\n\t"
-        ".word 0x1384\n\t"
+        "1: .word 0x1384\n\t"
+        "jz 1b\n\t" /* restart on IRQ */
         "mov r15, %0"
         : "=m"(ret)
         : "m"(key),
@@ -487,7 +491,8 @@ always_inline int sancus_unwrap_with_key(const void* key,
         "mov %5, r13\n\t"
         "mov %6, r14\n\t"
         "mov %7, r15\n\t"
-        ".word 0x1385\n\t"
+        "1: .word 0x1385\n\t"
+        "jz 1b\n\t" /* restart on IRQ */
         "mov r15, %0"
         : "=m"(ret)
         : "m"(key),
@@ -539,6 +544,7 @@ always_inline sm_id sancus_get_id(void* addr)
     sm_id ret;
     asm("mov %1, r15\n\t"
         ".word 0x1386\n\t"
+        "jz .\n\t" /* should never fail */
         "mov r15, %0"
         : "=m"(ret)
         : "m"(addr)
@@ -566,6 +572,7 @@ always_inline sm_id sancus_get_caller_id(void)
 {
     sm_id ret;
     asm(".word 0x1387\n\t"
+        "jz .\n\t" /* should never fail */
         "mov r15, %0"
         : "=m"(ret)
         :

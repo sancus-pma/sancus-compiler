@@ -22,7 +22,8 @@ __sm_verify:
     ; we don't have an ID yet, calculate tag
     .word 0x1382
     cmp #0x0000, r15
-    jeq .Lexit
+    ; Try again if our ID is zero. This may happen if we got interrupted while calculating the ID
+    jeq .Ltag 
     mov r15, 0(r13)
     ret
 
